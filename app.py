@@ -133,15 +133,20 @@ def main():
             prompt = create_prompt_template()
             model = create_model(OPENAI_API_KEY)
             output_parser = StrOutputParser()
-            # chain =(
-            #     {"context": retriever | format_docs, "question": RunnablePassthrough()}
-            #     | prompt 
-            #     | model 
-            #     | output_parser
-            # )
-            chain = prompt | model | output_parser
+            # create the chain 
+            chain =(
+                # run paral
+                {"context": retriever | format_docs, "question": RunnablePassthrough()}
+                | prompt 
+                | model 
+                | output_parser
+            )
+            response = chain.invoke(question)
+            # Another explicit way to put the relevant result to context
 
-            response = chain.invoke({"question": question, "context": docs})
+            # chain = prompt | model | output_parser
+            # response = chain.invoke({"question": question, "context": docs})
+
             st.write(f"Q: {question}")
             st.write(f"A: {response}")
 
