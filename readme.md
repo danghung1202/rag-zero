@@ -18,6 +18,8 @@ pip install -r requirements.txt
 
 ## Usage
 
+Before run the app, you need to input the OpenAI key into the `.env` file
+
 ```bash
 streamlit run app.py
 ```

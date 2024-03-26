@@ -1,5 +1,6 @@
 
 import os
+import hashlib
 import streamlit as st
 from streamlit_extras.add_vertical_space import add_vertical_space
 from PyPDF2 import PdfReader
@@ -34,7 +35,8 @@ def create_new_file(file_name, file_content):
         f.write(file_content)
 
 def create_file_name(pdf_name):
-    return str(abs(hash(pdf_name)))
+    hash_object = hashlib.md5(pdf_name.encode())
+    return hash_object.hexdigest()
 
 # Load and convert the pdf file to text
 def load_and_convert_pdf_to_text(pdf):
@@ -59,7 +61,7 @@ def split_text_into_chunks(text, chunk_size, chunk_overlap):
 
 def create_embeddings(api_key):
     """Creates embeddings from text."""
-    return OpenAIEmbeddings(openai_api_key=api_key)
+    return OpenAIEmbeddings(openai_api_key=api_key, chunk_size=300)
 
 def load_vector_database(store_name, embeddings):
     vectordb = FAISS.load_local(store_name, embeddings,allow_dangerous_deserialization=True)
@@ -135,7 +137,7 @@ def main():
             output_parser = StrOutputParser()
             # create the chain 
             chain =(
-                # run paral
+                # run RunnableParallel in short
                 {"context": retriever | format_docs, "question": RunnablePassthrough()}
                 | prompt 
                 | model 
