@@ -10,6 +10,8 @@ OPENAI_API_KEY = "your_openai_api_key"  # Replace with your actual API key
 GPT_MODEL_NAME = 'gpt-4'
 
 # Load and convert the pdf file to text
+
+
 def load_and_convert_pdf_to_text(pdf):
     """Load and extract the text from pdf using the PdfReader"""
     if pdf is not None:
@@ -22,6 +24,7 @@ def load_and_convert_pdf_to_text(pdf):
         return text
     return None
 
+
 def split_text_into_chunks(text, chunk_size, chunk_overlap):
     """Because of limitation of context window,
      need to splits text into smaller chunks for processing."""
@@ -31,6 +34,7 @@ def split_text_into_chunks(text, chunk_size, chunk_overlap):
     )
     return text_spliter.split_text(text)
 
+
 def create_embeddings(api_key):
     """Creates embeddings from text."""
     # Set chunk_site = 300 to take over the issue rate limit when the token larger than context window
@@ -39,7 +43,8 @@ def create_embeddings(api_key):
 
 
 def load_vector_database(store_name, embeddings):
-    vectordb = FAISS.load_local(store_name, embeddings, allow_dangerous_deserialization=True)
+    vectordb = FAISS.load_local(
+        store_name, embeddings, allow_dangerous_deserialization=True)
     return vectordb
 
 
@@ -55,17 +60,19 @@ def create_retriever(vectordb):
     return retriever
 
 
-def create_prompt_template():
-    template = """Use the following pieces of context to answer the question at the end.
-    If you don't know the answer, just say that you don't know, don't try to make up an answer.
-    Use three sentences maximum and keep the answer as concise as possible.
-    Always say "thanks for asking!" at the end of the answer.
+def create_prompt_template(template=None):
+    if template is None:
+        template = """Use the following pieces of context to answer the question at the end.
+        If you don't know the answer, just say that you don't know, don't try to make up an answer.
+        Use three sentences maximum and keep the answer as concise as possible.
+        Always say "thanks for asking!" at the end of the answer.
 
-    {context}
+        {context}
 
-    Question: {question}
+        Question: {question}
 
-    Helpful Answer:"""
+        Helpful Answer:"""
+        
     prompt = ChatPromptTemplate.from_template(template)
     return prompt
 
