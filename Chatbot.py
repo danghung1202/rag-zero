@@ -3,6 +3,7 @@
 import streamlit as st
 from streamlit_extras.add_vertical_space import add_vertical_space
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
 import langchain_rag as lrag
 
 from load_config import getOpenAIKey
@@ -23,9 +24,8 @@ with st.sidebar:
 
 def main():
     st.header("Chatbot")
-    template = """You are world class technical documentation write.
+    template = """You are good AI assistance.
     If you don't know the answer, just say that you don't know, don't try to make up an answer.
-    Always say "thanks for asking!" at the end of the answer.
 
     Question: {question}
 
@@ -34,12 +34,12 @@ def main():
     model = lrag.create_model(OPENAI_API_KEY)
     output_parser = StrOutputParser()
     # create the chain
-    chain = prompt | model | output_parser
+    chain ={"question": RunnablePassthrough()} | prompt | model | output_parser
 
     
     question = st.text_input("Enter your question:")
     if question.strip():
-        response = chain.invoke(question)
+        response = chain.invoke({"question": question})
         st.write(f"Q: {question}")
         st.write(f"A: {response}")
 

@@ -34,6 +34,14 @@ def split_text_into_chunks(text, chunk_size, chunk_overlap):
     )
     return text_spliter.split_text(text)
 
+def split_documents_into_chunks(docs, chunk_size, chunk_overlap):
+    """Because of limitation of context window,
+     need to splits text into smaller chunks for processing."""
+    text_spliter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap
+    )
+    return text_spliter.split_documents(docs)
 
 def create_embeddings(api_key):
     """Creates embeddings from text."""
@@ -48,9 +56,15 @@ def load_vector_database(store_name, embeddings):
     return vectordb
 
 
-def save_text_embedding_to_db(chunks, embeddings, store_name):
+def save_text_embedding_to_db(chunks_of_text, embeddings, store_name):
     """Sets up a vector database for storing embeddings."""
-    vectordb = FAISS.from_texts(chunks, embedding=embeddings)
+    vectordb = FAISS.from_texts(chunks_of_text, embedding=embeddings)
+    vectordb.save_local(store_name)
+    return vectordb
+
+def save_document_embedding_to_db(chunks_of_documents, embeddings, store_name):
+    """Sets up a vector database for storing embeddings."""
+    vectordb = FAISS.from_documents(chunks_of_documents, embedding=embeddings)
     vectordb.save_local(store_name)
     return vectordb
 
@@ -78,7 +92,7 @@ def create_prompt_template(template=None):
 
 
 def create_model(api_key):
-    model = ChatOpenAI(api_key=api_key, temperature=0)
+    model = ChatOpenAI(api_key=api_key, temperature=0.5)
     return model
 
 
