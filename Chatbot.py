@@ -34,12 +34,13 @@ def main():
     model = lrag.create_model(OPENAI_API_KEY)
     output_parser = StrOutputParser()
     # create the chain
-    chain ={"question": RunnablePassthrough()} | prompt | model | output_parser
-
+    # chain ={"question": RunnablePassthrough()} | prompt | model | output_parser
+    chain = model | output_parser
     
     question = st.text_input("Enter your question:")
     if question.strip():
-        response = chain.invoke({"question": question})
+        # response = chain.invoke({"question": question})
+        response = chain.invoke(question)
         st.write(f"Q: {question}")
         st.write(f"A: {response}")
 

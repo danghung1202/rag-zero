@@ -16,6 +16,7 @@ OPENAI_API_KEY = getOpenAIKey()
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 50
 
+
 # Sidebar contents
 with st.sidebar:
     openai_api_key = st.text_input("OpenAI API Key", key="chatbot_api_key", type="password")
@@ -45,7 +46,7 @@ def main():
                     chunks = lrag.split_documents_into_chunks(docs, CHUNK_SIZE, CHUNK_OVERLAP)
                     vectordb = lrag.save_document_embedding_to_db(chunks, embeddings, store_name)
 
-                    # create the text file contains the pdf content
+                    # create the text file contains the web content
                     fu.create_new_file(f"{store_name}/{uu.convert_url_to_file_name(url)}.txt", f"{lrag.format_docs(docs).encode('utf-8')}")
                     st.write(f"The website content is embedded to {store_name}.pkl successfully")
                 else:
@@ -69,8 +70,10 @@ def main():
                 | model
                 | output_parser
             )
+
+
             response = chain.invoke(question)
-            # Another explicit way to put the relevant result to context
+            # Another clear way to put the relevant result to context
 
             # chain = prompt | model | output_parser
             # response = chain.invoke({"question": question, "context": docs})
