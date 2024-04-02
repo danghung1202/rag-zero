@@ -4,6 +4,8 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai.chat_models import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_text_splitters import Language
 
 # Constants and API Keys
 OPENAI_API_KEY = "your_openai_api_key"  # Replace with your actual API key
@@ -34,10 +36,21 @@ def split_text_into_chunks(text, chunk_size, chunk_overlap):
     )
     return text_spliter.split_text(text)
 
+
 def split_documents_into_chunks(docs, chunk_size, chunk_overlap):
     """Because of limitation of context window,
      need to splits text into smaller chunks for processing."""
     text_spliter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap
+    )
+    return text_spliter.split_documents(docs)
+
+def split_code_into_chunks(docs, language, chunk_size, chunk_overlap):
+    """Because of limitation of context window,
+     need to splits text into smaller chunks for processing."""
+    text_spliter = RecursiveCharacterTextSplitter.from_language(
+        language,
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap
     )
@@ -62,6 +75,7 @@ def save_text_embedding_to_db(chunks_of_text, embeddings, store_name):
     vectordb.save_local(store_name)
     return vectordb
 
+
 def save_document_embedding_to_db(chunks_of_documents, embeddings, store_name):
     """Sets up a vector database for storing embeddings."""
     vectordb = FAISS.from_documents(chunks_of_documents, embedding=embeddings)
@@ -76,19 +90,59 @@ def create_retriever(vectordb):
 
 def create_prompt_template(template=None):
     if template is None:
-        template = """Use the following pieces of context to answer the question at the end.
-        If you don't know the answer, just say that you don't know, don't try to make up an answer.
-        Use three sentences maximum and keep the answer as concise as possible.
-        Always say "thanks for asking!" at the end of the answer.
+        template = """You are an assistant for question-answering tasks. \
+        Use the following pieces of retrieved context to answer the question. \
+        If you don't know the answer, just say that you don't know. \
+        Use three sentences maximum and keep the answer concise.\
 
         {context}
 
         Question: {question}
 
         Helpful Answer:"""
-        
+
     prompt = ChatPromptTemplate.from_template(template)
     return prompt
+
+def create_qa_prompt():
+    qa_system_prompt = """You are an assistant for question-answering tasks. \
+    Use the following pieces of retrieved context to answer the question. \
+    If you don't know the answer, just say that you don't know. \
+    Use three sentences maximum and keep the answer concise.\
+
+    {context}"""
+    qa_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", qa_system_prompt),
+            MessagesPlaceholder("chat_history"),
+            ("human", "{question}"),
+        ]
+    )
+    return qa_prompt
+
+# https://python.langchain.com/docs/use_cases/question_answering/chat_history
+def create_contextualize_q_prompt():
+    '''
+    Contextualizing questions: Add a sub-chain that takes the latest user question and reformulates it in the context of the chat history. 
+    This is needed in case the latest question references some context from past messages. 
+    For example, if a user asks a follow-up question like “Can you elaborate on the second point?”, 
+    this cannot be understood without the context of the previous message. 
+    Therefore we can’t effectively perform retrieval with a question like this.
+    '''
+    contextualize_q_system_prompt = """Given a chat history and the latest user question \
+    which might reference context in the chat history, formulate a standalone question \
+    which can be understood without the chat history. Do NOT answer the question, \
+    just reformulate it if needed and otherwise return it as is."""
+
+
+    contextualize_q_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", contextualize_q_system_prompt),
+            MessagesPlaceholder("chat_history"),
+            ("human", "{question}"),
+        ]
+    )
+    return contextualize_q_prompt
 
 
 def create_model(api_key):

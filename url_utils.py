@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 def url_parser(url):
     
     parts = urlparse(url)
-    directories = parts.path.strip("/").split("/")
+    segments = parts.path.strip("/").split("/")
     queries = parts.query.strip("&").split("&")
     
     elements = {
@@ -13,7 +13,7 @@ def url_parser(url):
         "params": parts.params,
         "query": parts.query,
         "fragment": parts.fragment,
-        "directories": directories,
+        "segments": segments,
         "queries": queries,
     }
     
@@ -21,10 +21,15 @@ def url_parser(url):
 
 def convert_url_to_file_name(url):
     elements = url_parser(url)
-    print(elements)
     domain = elements["netloc"]
-    parts = "-".join(part for part in elements["directories"])
+    parts = "-".join(part for part in elements["segments"])
     return domain + "-" + parts
+
+def get_last_segment(url):
+    elements = url_parser(url)
+    segments = elements.get("segments")
+    last_element = segments[-1]
+    return last_element
 
 def test():
     url = "https://niteco.com/about-us/"
