@@ -39,7 +39,7 @@ def chunks_and_document(pdf):
 with st.sidebar:
     openai_api_key = st.text_input("OpenAI API Key", key="chatbot_api_key", type="password")
     "[Get an OpenAI API key](https://platform.openai.com/account/api-keys)"
-    "[View the source code](https://github.com/streamlit/llm-examples/blob/main/Chatbot.py)"
+    "[View the source code](https://github.com/danghung1202/rag-zero.git)"
 
     add_vertical_space(5)
     st.write('Made with love AI')
@@ -47,28 +47,40 @@ with st.sidebar:
 
 def main():
     st.header("Document Summarization")
+
     prompt = lrag.create_prompt_template(template)
     model = lrag.create_model(OPENAI_API_KEY)
     # create the chain
-    stuff_chain = create_summarize_chain(model, prompt)
+    summarize_chain = create_summarize_chain(model, prompt)
 
-    url = st.text_input("Input the url you want to summary")
-    if url is not None and url.strip():
-        with st.spinner("Summarizing the pdf..."):
-            loader = WebBaseLoader(url)
-            docs = loader.load()
-            response = stuff_chain.run(docs)
-            st.write(f"Summarized: {response}")
+    use_document = "Upload a document"
+    use_url = "Enter a website URL"
+    input_method = st.radio("Select source knowledge", (use_document, use_url))
+
+    if input_method == use_document:
+        # upload a PDF file
+        pdf = st.file_uploader("Upload your document", type='pdf')
     
-    # upload a PDF file
-    pdf = st.file_uploader("Upload your document", type='pdf')
-    if pdf is not None:
-        with st.spinner("Summarizing the pdf..."):
-            # convert the splitted chunks into document format
-            docs = chunks_and_document(pdf)
-            response = stuff_chain.run(docs)
-            st.write(f"Summarized: {response}")
+    elif input_method == use_url:
+        # extract the content from url
+        url = st.text_input("Input the url you want to summary")
+        
+    if st.button('Summarize'):
+        if input_method == use_document:
+            if pdf is not None:
+                with st.spinner("Summarizing the pdf..."):
+                    # convert the splitted chunks into document format
+                    docs = chunks_and_document(pdf)
+                    response = summarize_chain.run(docs)
+                    st.write(f"Summarized: {response}")
 
-
+        elif input_method == use_url:
+            if url is not None and url.strip():
+                with st.spinner("Summarizing the url..."):
+                    loader = WebBaseLoader(url)
+                    docs = loader.load()
+                    response = summarize_chain.run(docs)
+                    st.write(f"Summarized: {response}")
+    
 if __name__ == '__main__':
     main()
