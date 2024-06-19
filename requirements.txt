@@ -10,3 +10,4 @@ streamlit-extras
 altair<5
 transformers==4.37.2
 torch==2.2.0
+st-chat-message==0.3.8

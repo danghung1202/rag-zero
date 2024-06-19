@@ -13,7 +13,7 @@ from load_config import getOpenAIKey
 from operator import itemgetter
 from langchain_core.runnables import RunnableBranch
 from langchain_core.runnables import RunnableLambda
-from streamlit_chat import message as chat_ui
+from st_chat_message import message as chat_ui
 from langchain_core.messages import HumanMessage, AIMessage
 
 OPENAI_API_KEY = getOpenAIKey()
